@@ -5,7 +5,7 @@ from classifyHistology.extract_images import rw_images as extract
 
 
 # read the dataframes describing disk locations of the data:
-x_train,y_train=extract.readDataset([32,64,3],'/home/ryan/Documents/Datasets/classify_histology/augmented/train_dataset_database_info.pkl',num_images = 10000)
+x_train,y_train=extract.readDataset([32,64,3],'/home/ryan/Documents/Datasets/classify_histology/augmented/train_dataset_database_info.pkl',num_images = 1000)
 x_test,y_test=extract.readDataset([32,64,3],'/home/ryan/Documents/Datasets/classify_histology/augmented/test_dataset_database_info.pkl')
 
 # training hyperparameteers
@@ -16,6 +16,6 @@ th = {
     'n_input': [32,64,3], #is not now used, should be used when defining placeholders
     'n_classes': 2,
     'net':'convNet2',
-    'dropout_keep_prob': 0.8}
+    'dropout_keep_prob': 0.7}
 
 train(x_train,y_train,x_test,y_test,th)

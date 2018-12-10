@@ -16,7 +16,7 @@ import random as rand
 #    3) Extract smaller sub-images along the edge of the tissue and save to hard drive
 #    Inputs:
 #        to_mem - boolean describing if images should be written to hard drive (False) or memory (True)
-def rwImages(root_dir,ah=ah,show_steps=False,to_mem=False):
+def rwImages(root_dir,ah,show_steps=False,to_mem=False):
     
     # define the dataframe that will hold all the image labels and locations
     empty_np_array=np.zeros([ah['train_image_size_rc'][0]//ah['im_downscale_factor'],ah['train_image_size_rc'][1]//ah['im_downscale_factor']])
@@ -68,12 +68,7 @@ def rwImages(root_dir,ah=ah,show_steps=False,to_mem=False):
                     tissue_border_last,new_pixel_path_row,new_pixel_path_col=border.getPixelPath(tissue_border)
                     tissue_border = tissue_border_last
                     
-                    # if this row is longer than the last, then save it. We're looking for the longest edge in the image
-                    #if len(new_pixel_path_row) > len(pixel_path_row):
-                    #    pixel_path_row = new_pixel_path_row
-                    #    pixel_path_col = new_pixel_path_col
-                    
-                    # alternative metric, "length of path"
+                    # the right border has the longest diameter
                     path_width = np.max(new_pixel_path_col)-np.min(new_pixel_path_col)
                     path_height = np.max(new_pixel_path_row)-np.min(new_pixel_path_row)
                     new_path_max_dim = np.sqrt(path_width**2+path_height**2)
@@ -82,14 +77,7 @@ def rwImages(root_dir,ah=ah,show_steps=False,to_mem=False):
                         pixel_path_row = new_pixel_path_row
                         pixel_path_col = new_pixel_path_col
                         path_max_dim=new_path_max_dim
-                    
-                    # For Debugging: 
-                    # Some images don't get thresholded well and there are too many borders
-                    # In that case, discard the image.
-                    #border_count+=1
-                    #if border_count==27:
-                    #    print(border_count)
-                
+                                   
                 # show border if desired
                 if show_steps:
                     plt.subplot(3,1,2)
@@ -122,10 +110,24 @@ def rwImages(root_dir,ah=ah,show_steps=False,to_mem=False):
                 else:
                     is_train_data=bool(np.random.randint(0,int(1/ah['test_dataset_size']-1)))
                 
-                # This loops through all of the aug_temp_images along the surface of the tissue   
+                # This loops through all of the aug_temp_images along the surface of the tissue
+                normal_angle_rad_list=[]   
+                image_pos_rc_list=[]
+                aug_images=np.array([])
                 while 1:
                     try:
+                        # get the next image for augmentation
                         aug_temp_image,normal_angle_rad,border_index=next(sub_image_gen)
+#                         normal_angle_rad_list.append(normal_angle_rad)
+#                         image_pos_rc_list.append((pixel_path_row[border_index],pixel_path_col[border_index]))
+#                         
+#                         # save the list of images into an array
+#                         # if its the first image then set equal, if subsequent then append
+#                         if not len(aug_images):
+#                             aug_images = np.array(aug_temp_image,ndmin=(len(aug_temp_image.shape)+1))
+#                         else:
+#                             new_image=np.array(aug_temp_image,ndmin=(len(aug_temp_image.shape)+1))
+#                             aug_images = np.append(aug_images,new_image,axis=0)
                         
                         # Since we just got a new place on the tissue, update the id 
                         tissue_loc_id+=1
@@ -141,6 +143,19 @@ def rwImages(root_dir,ah=ah,show_steps=False,to_mem=False):
                             try:
                                 # get the next image from data augmentation
                                 aug_image,aug_details,augmented=next(aug_gen)
+                                
+                                # get the next image for augmentation
+                                normal_angle_rad_list.append(normal_angle_rad)
+                                image_pos_rc_list.append((pixel_path_row[border_index],pixel_path_col[border_index]))
+                                
+                                # save the list of images into an array
+                                # if its the first image then set equal, if subsequent then append
+                                if not len(aug_images):
+                                    aug_images = np.array(aug_image,ndmin=(len(aug_image.shape)+1))
+                                else:
+                                    new_image=np.array(aug_image,ndmin=(len(aug_image.shape)+1))
+                                    aug_images = np.append(aug_images,new_image,axis=0)
+                
 
                                 # find the name of the directory to save the new image
                                 new_dir_name=ah['save_root_dir']+'/patient'+str(patient_number)+'/'+fname[:fname.rfind('.jpg')]+'/'+'b'+str(border_index)+'/'
@@ -177,15 +192,16 @@ def rwImages(root_dir,ah=ah,show_steps=False,to_mem=False):
                             skipped.append(dir_name+'/'+fname)
                             print('skipped file: '+skipped[-1])
                         break
-                # For Debugging:  
-                #if '1' in fname:
-                #    print('test')    
-    print('pickling')
-    data_df_loc=ah['save_root_dir']+'/dataset_database_info.pkl'
-    data_df.to_pickle(data_df_loc)
-    
-    print('Number of training images: ' + str(len(data_df_loc)))
-    return data_df_loc
+
+    if not to_mem:
+        print('pickling')
+        data_df_loc=ah['save_root_dir']+'/dataset_database_info.pkl'
+        data_df.to_pickle(data_df_loc)
+        
+        print('Number of training images: ' + str(len(data_df_loc)))
+        return data_df_loc
+    else: 
+        return normal_angle_rad_list,image_pos_rc_list,aug_images
 
 # take in a dataframe describing the location of each file on hd of augmented dataset and
 # return the data in memory

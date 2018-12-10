@@ -96,7 +96,8 @@ def augmentAndSave(image,normal_angle_rad,fname,dir_name,ah,save_dir='/home/ryan
             if (aug_rot_ang==0) & (dr == 0) & (dc == 0):
                 augmented=False            
             yield this_image_resized,' - '+prefix+'..f0',augmented
-            yield this_image_flipped,' - '+prefix+'..f1',True       
+            if ah['reflect_horiz']:
+                yield this_image_flipped,' - '+prefix+'..f1',True       
 
 def calcNormalAngle(im_thresh,row_border,col_border,border_index,half_bs,norm_vec_len):
     # calculate tangent (using row/col basis)

@@ -14,14 +14,14 @@ def train(train_x,train_y,test_x,test_y,th):
     weights,biases,x,y,ph_is_training = vars.definePhVar(th)
     
     # define performance metrics and optimizer
-    cost, optimizer, accuracy = vars.performanceMetrics(x,y,weights,biases,th,ph_is_training)
+    cost, optimizer, accuracy,_ = vars.performanceMetrics(x,y,weights,biases,th,ph_is_training)
     
     # make an op to save all the learned variabes:
     saver = tf.train.Saver()
     
     # train the net
     with tf.Session() as sess:
-        output_dir=os.path.abspath('../TensorBoard/')+'/Output'+datetime.datetime.now().strftime("%I-%M%p-%B-%d-%Y")
+        output_dir=os.path.abspath('../../TensorBoard/')+'/Output'+datetime.datetime.now().strftime("%I-%M%p-%B-%d-%Y")
             
         with tf.name_scope('performance'):
             # create loss placeholder and summary

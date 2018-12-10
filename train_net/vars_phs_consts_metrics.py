@@ -57,7 +57,7 @@ def performanceMetrics(x,y,weights,biases,th,ph_is_training): #,is_training):
     netFunc = getattr(net,th['net'])
     
     # define the networks, which outputs the logits
-    pred = net.convNet2(x, weights, biases,th,is_training=ph_is_training) #,is_training)
+    pred = netFunc(x, weights, biases,th,is_training=ph_is_training) #,is_training)
     
     # Instructions for updating:
     # 
@@ -75,4 +75,4 @@ def performanceMetrics(x,y,weights,biases,th,ph_is_training): #,is_training):
     #calculate accuracy across all the given images and average them out. 
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     
-    return cost, optimizer, accuracy
+    return cost, optimizer, accuracy, pred
