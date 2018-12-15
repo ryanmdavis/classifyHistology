@@ -11,6 +11,7 @@ matplotlib = "*"
 scikit-image = "*"
 pandas = "*"
 tensorflow = "*"
+cytoolz = "*"
 
 [requires]
 python_version = "3.6"

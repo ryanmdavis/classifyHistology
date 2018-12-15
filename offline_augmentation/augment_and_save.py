@@ -30,7 +30,7 @@ def borderWalk(image,im_thresh,row_border,col_border,ah):
         while not isSubImageInvalid(border_index,row_border,col_border,aug_image_half_width,image.shape,ah['norm_vec_len_px']):
       
             # calculate the orientation of the image, i.e., the angle of the normal vector wrt the image axis
-            normal_angle_rad = calcNormalAngle(im_thresh,row_border,col_border,border_index,half_bs,ah['norm_vec_len_px'])
+            normal_angle_rad = calcNormalAngle(im_thresh,row_border,col_border,border_index,max([half_bs,10]),ah['norm_vec_len_px'])
       
             # grab the aug_temp_image. It's bigger than needed because we need to rotate
             x_min=col_border[border_index]-aug_image_half_width
@@ -67,10 +67,11 @@ def augmentAndSave(image,normal_angle_rad,fname,dir_name,ah,save_dir='/home/ryan
     x_shift=int(np.around(np.real(ah['train_image_size_rc'][1]*adjust*np.exp(normal_angle_rad*1j))))
     y_shift=int(np.around(np.imag(ah['train_image_size_rc'][0]*adjust*np.exp(normal_angle_rad*1j))))
     
-    for rot_ang in ah['rotate_deg']-normal_angle_deg:
+    for rot_ang_list in ah['rotate_deg']:
+        rot_ang=rot_ang_list-normal_angle_deg
         # rotate image so surface is parallel to columns (plus the data augmentation rotation) and scale
         # so that maximum pixel value is 1.
-        rotated = sp.ndimage.rotate(image,rot_ang)
+        rotated = sp.ndimage.rotate(image,-rot_ang)
         
         # we shift the image because we want most of the image to be compose of tissue
         # note this shift assumes that the image has been rotated (ignoring augmentation rotation)
