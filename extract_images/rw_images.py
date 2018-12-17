@@ -122,18 +122,7 @@ def rwImages(root_dir,ah,show_steps=False,to_mem=False):
                         try:
                             # get the next image for augmentation
                             aug_temp_image,normal_angle_rad,border_index=next(sub_image_gen)
-                            print(border_index)
-    #                         normal_angle_rad_list.append(normal_angle_rad)
-    #                         image_pos_rc_list.append((pixel_path_row[border_index],pixel_path_col[border_index]))
-    #                         
-    #                         # save the list of images into an array
-    #                         # if its the first image then set equal, if subsequent then append
-    #                         if not len(aug_images):
-    #                             aug_images = np.array(aug_temp_image,ndmin=(len(aug_temp_image.shape)+1))
-    #                         else:
-    #                             new_image=np.array(aug_temp_image,ndmin=(len(aug_temp_image.shape)+1))
-    #                             aug_images = np.append(aug_images,new_image,axis=0)
-                            
+    
                             # Since we just got a new place on the tissue, update the id 
                             tissue_loc_id+=1
                                                             
@@ -163,7 +152,7 @@ def rwImages(root_dir,ah,show_steps=False,to_mem=False):
                     
     
                                     # find the name of the directory to save the new image
-                                    new_dir_name=ah['save_root_dir']+'/patient'+str(patient_number)+'/'+fname[:fname.rfind('.jpg')]+'/'+'b'+str(border_index)+'/'
+                                    new_dir_name=ah['save_root_dir']+dir_name[dir_name.rfind('/'):]+'/'+fname[:fname.rfind('.jpg')]+'/'+'b'+str(border_index)+'/'
                                     if not os.path.exists(new_dir_name):
                                         os.makedirs(new_dir_name)
                                         

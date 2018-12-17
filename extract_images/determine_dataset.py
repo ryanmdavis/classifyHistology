@@ -56,7 +56,12 @@ def determine_dataset(db_file_loc,percent_testing):
     test_df.to_pickle(test_file_path)
     train_df.to_pickle(train_file_path)
     
-    print('length of dataset: ' +str(len(normal_train_df)))
+    print('number of training images (normal): ' +str(len(normal_train_df)))
+    print('number of training images (cancer): ' +str(len(cancer_train_df)))
+    print('number of testing images (normal): ' +str(len(normal_test_df)))
+    print('number of testing images (cancer): ' +str(len(cancer_test_df)))
+    
+    return train_file_path,test_file_path
     
 def readDatasetDf():
     test_df=pd.read_pickle('/home/ryan/Documents/Datasets/classify_histology/augmented/test_dataset_database_info.pkl')

@@ -8,20 +8,21 @@ from classifyHistology.extract_images import rw_images as rw
 
 # this is the master function that takes in training and test data and labels 
 def train(train_x,train_y,test_x,test_y,th):
-
+    tf.reset_default_graph() #need this if running train inside loop
+    
     # define weights and biases variables based on training hyperparameters (th)
     # also define the placeholders x and y 
     weights,biases,x,y,ph_is_training = vars.definePhVar(th)
     
     # define performance metrics and optimizer
-    cost, optimizer, accuracy,_ = vars.performanceMetrics(x,y,weights,biases,th,ph_is_training)
+    cost, optimizer, accuracy,pred = vars.performanceMetrics(x,y,weights,biases,th,ph_is_training)
     
     # make an op to save all the learned variabes:
     saver = tf.train.Saver()
     
     # train the net
     with tf.Session() as sess:
-        output_dir=os.path.abspath('../../TensorBoard/')+'/Output'+datetime.datetime.now().strftime("%I-%M%p-%B-%d-%Y")
+        output_dir=os.path.abspath('../../TensorBoard/')+'/Output'+datetime.datetime.now().strftime("%I-%M-%S%p-%B-%d-%Y")
             
         with tf.name_scope('performance'):
             # create loss placeholder and summary
@@ -74,8 +75,17 @@ def train(train_x,train_y,test_x,test_y,th):
             #summ = sess.run(performance_summaries, feed_dict={tf_loss_ph:loss, tf_acc_ph:acc})
             summary_writer.add_summary(summ,i)
         summary_writer.close()
-        
+               
         os.mkdir(output_dir+'/model')
         save_path = saver.save(sess, output_dir+"/model/model.ckpt")
         print('save path: '+ save_path)
-    print('pipenv run python -m tensorboard.main --logdir='+output_dir)
+        
+        # Test model
+        correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
+        # Calculate accuracy
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+        print("Accuracy:", accuracy.eval({x: test_x, y: test_y, ph_is_training:False}))
+    tensorboard_loc='pipenv run python -m tensorboard.main --logdir='+output_dir
+    print(tensorboard_loc)
+    return output_dir
+#pipenv run python -m tensorboard.main --logdir=drop1:/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output04-38-37PM-December-15-2018,drop0.8:/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output05-35-24PM-December-15-2018,drop0.6:/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output06-34-47PM-December-15-2018,drop0.4:/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output07-34-02PM-December-15-2018

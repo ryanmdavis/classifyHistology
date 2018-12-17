@@ -101,6 +101,8 @@ def tracePath(edge_image,initial_pixel):
     if image3x3.sum()>1:
         nonzero=image3x3.nonzero()
         path_max_dim=0
+        pixel_path_row=[]
+        pixel_path_col=[]
         # now recursively call tracePath for each possible starting point in image3x3
         for init_row,init_col in zip(nonzero[0],nonzero[1]):
             new_edge_image=edge_image[:]
