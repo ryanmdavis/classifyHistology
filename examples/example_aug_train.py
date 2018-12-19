@@ -7,7 +7,7 @@ from classifyHistology.train_net.trainHistNet import train
 ah={
     'border_step':10,                   # number of pixels to step along tissue border before capturing the next image
     'train_image_size_rc':[100,200],
-    'rotate_deg':[-5,0,5],
+    'rotate_deg':[-10,-5,0,5,10],
     'translate_pix_rc':[0],
     'reflect_horiz':1,
     'mov_avg_win':100,

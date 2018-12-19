@@ -10,6 +10,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import imageio
 import math,cmath,sys
+import numpy as np
 
 ah={
     'border_step':50,                   # number of pixels to step along tissue border before capturing the next image
@@ -17,12 +18,12 @@ ah={
     'rotate_deg':[0],
     'translate_pix_rc':[0],
     'reflect_horiz':0,
-    'mov_avg_win':100,
+    'mov_avg_win':200,
     'save_root_dir':'/home/ryan/Documents/Datasets/classify_histology/augmented',
     'image_fill_factor':2/3, #must by <1, >0
     'im_downscale_factor':3,
     'test_dataset_size':0.2, #20% of data will go into test dataset
-    'norm_vec_len_px':50,
+    'norm_vec_len_px':100,
     'threshold_blue':200,
     'strel_size':10
     }
@@ -43,8 +44,9 @@ th = {
 #image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/patient180-tumor1-tr-3-test'
 #image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient18-normal4-tl-1-'
 #image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/large_dataset/Patient001'
-image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient18-tumor5-br-2-'
+#image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient18-tumor5-br-2-'
 #image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient18-tumor5-bl-1-'
+image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient101-normal-1-'
 
 #read a raw image. This one is in the testing dataset and is correctly classified with the below predictor:
 # im_big=imageio.imread('/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient18-tumor5-bl-1-3-b931/3 - r+0..d+0..d+0..f0.png')
@@ -68,16 +70,23 @@ pred = vars.performanceMetrics(x,y,weights,biases,th,False)[3] #predictor is 4th
 saver = tf.train.Saver()
 
 # model location
-model_path='/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output06-48-00PM-December-16-2018/model/model.ckpt'
-
+#model_path='/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output10-56-46PM-December-16-2018/model/model.ckpt'
+#model_path=['/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output09-43-53PM-December-17-2018/model/model.ckpt','/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output12-22-08AM-December-18-2018/model/model.ckpt','/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output02-58-28AM-December-18-2018/model/model.ckpt'] #EOD 12/17
+model_path=['/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output07-09-06AM-December-18-2018/model/model.ckpt','/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output07-58-05AM-December-18-2018/model/model.ckpt','/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output08-46-30AM-December-18-2018/model/model.ckpt','/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output09-34-59AM-December-18-2018/model/model.ckpt','/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output10-23-27AM-December-18-2018/model/model.ckpt','/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output11-12-00AM-December-18-2018/model/model.ckpt'] #BOD 12/18/18
+probs=np.zeros((images_to_classify.shape[0],1))
 # launch the model and load the restored variables
-with tf.Session() as sess:
-    saver.restore(sess, model_path)
+for model_num in range(len(model_path)):
+    with tf.Session() as sess:
+        saver.restore(sess, model_path[model_num])
+    
+        # predict for input image    
+        prediction = sess.run(pred, feed_dict={x: images_to_classify, ph_is_training:False})
+        probs_to_append=tf.nn.softmax(prediction).eval()
+        probs=np.append(probs,probs_to_append[:,1].reshape((-1,1)),axis=1)
+probs=probs[:,1:]
+# plt.plot(probs)
+# plt.legend(('keep prob = 0.4','keep prob = 0.4','keep prob = 0.4','keep prob = 0.3','keep prob = 0.3','keep prob = 0.3'))
 
-    # predict for input image    
-    prediction = sess.run(pred, feed_dict={x: images_to_classify, ph_is_training:False})
-    probs=tf.nn.softmax(prediction).eval()
-    print(probs)
     
 #     # predict for test data
 #     # Test model
@@ -105,7 +114,8 @@ plt.imshow(im)
 plt.plot(annotation_pos_col,annotation_pos_row)
 plt.plot(image_surface_col,image_surface_row)
 plt.subplot('212')
-plt.plot(probs[:,0])
+plt.plot(probs)
+plt.show()
 
 # find positions of line annotations
 write_loc=f_path[0:f_path.rfind('/')+1]+'annotated-'+f_path[f_path.rfind('/')+1:]

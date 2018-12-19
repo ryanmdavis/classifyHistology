@@ -229,24 +229,28 @@ def readDataset(out_image_size,df_loc,randomize=True, num_images=-1):
     return x_train,y_train
 
 #'/home/ryan/Documents/Datasets/classify_histology/augmented/dataset_database_info.pkl'
-def showRandomImages(df_path,cancer_choice=True):
+def showRandomImages(df_path,aug=False,cancer=True,patient=''):
     grid_size=4
     
     data_df = pd.read_pickle(df_path)
-    data_no_aug=data_df[data_df['aug']==False]
-    data_no_aug_pheno=data_no_aug[data_no_aug['cancer']==cancer_choice]
-     
+    if not aug: # do we want translated, rotated, etc?
+        data_df=data_df[data_df['aug']==False]
+    data_df=data_df[data_df['cancer']==cancer]
+    if patient: # do we want to look at a certain patient?
+        data_df=data_df[data_df['patient']==patient]
+    
+    print('Your selected dataset has ' + str(len(data_df)) + 'images.')
+    
     rand_ids = []
-    normal_id_ls=[x for x in range(len(data_no_aug_pheno))]
-    for x in range(0,len(data_no_aug_pheno)):
+    normal_id_ls=[x for x in range(len(data_df))]
+    for x in range(0,len(data_df)):
         rand_ids.append(normal_id_ls.pop(rand.randint(0,len(normal_id_ls)-1)))
     
     for image_num in range(grid_size**2):
-        path=data_no_aug_pheno.iloc[rand_ids[image_num]]['file_loc']
+        path=data_df.iloc[rand_ids[image_num]]['file_loc']
         im=imageio.imread(path)
         ax=plt.subplot(grid_size,grid_size,image_num+1)
         ax.imshow(im)
         ax.set_title(path[path.rfind('atient')-1:path.rfind('/')+2])
         plt.axis('off')   
     plt.show() 
-    print('test')
