@@ -4,3 +4,8 @@ __pycache__/
 *$py.class
 
 notes.txt
+
+# images
+*.png
+*.tiff
+*.tif

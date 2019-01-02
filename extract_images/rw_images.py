@@ -21,7 +21,7 @@ def rwImages(root_dir,ah,show_steps=False,to_mem=False):
     
     # define the dataframe that will hold all the image labels and locations
     empty_np_array=np.zeros([ah['train_image_size_rc'][0]//ah['im_downscale_factor'],ah['train_image_size_rc'][1]//ah['im_downscale_factor']])
-    new_df=pd.DataFrame({'file_loc':['a'],'cancer':[1],'aug':[1],'aug_details':['a'],'patient':['a'],'tissue_loc_id':[1]})#,'image':[empty_np_array]})
+    new_df=pd.DataFrame({'file_loc':['a'],'cancer':[1],'aug':[1],'aug_details':['a'],'patient':['a'],'tissue_loc_id':[1],'section_num':[1]})#,'image':[empty_np_array]})
     data_df=pd.DataFrame()
     #test_df=pd.DataFrame()
     
@@ -29,8 +29,12 @@ def rwImages(root_dir,ah,show_steps=False,to_mem=False):
     if ah['save_root_dir'][-1] is '/':
         ah['save_root_dir']=ah['save_root_dir'][:-1]
 
-   # keep track of image files that were skipped:
+    # keep track of image files that were skipped:
     skipped=[]
+    
+    # for keeping track of tissue sections
+    list_of_tissue_sections=[]
+    section_num=-1
     
     # each set of augmented (rotated, translated, flipped) gets a unique ID
     tissue_loc_id=-1
@@ -39,10 +43,21 @@ def rwImages(root_dir,ah,show_steps=False,to_mem=False):
             # find the name of this subdirectory
             subdir_name=dir_name[dir_name.rfind('/')+1:]
             patient_number=int(subdir_name[subdir_name.find('tient')+5:subdir_name.find('-')])
+            
+            # give each tissue section a unique identifier
+            section_num+=1
+            print('section num = ' + str(section_num))
+                
             #dir_name='/media/ryan/002E-0232/nanozoomer_images/Patient18/Patient18-tumor1-tr-3-/'
             for fname in fileList:
+                # find the file type. We know it has to be a .jpg or .png
+                file_type=''
+                if '.jpg' in fname:
+                    file_type='.jpg'
+                else: 
+                    file_type='.png'  
+                
                 if 'annotated' not in fname:
-                    #fname='3.jpg'
                     f_path=dir_name+'/'+fname
                     print(f_path[f_path.rfind('Patient'):])
                     
@@ -152,12 +167,12 @@ def rwImages(root_dir,ah,show_steps=False,to_mem=False):
                     
     
                                     # find the name of the directory to save the new image
-                                    new_dir_name=ah['save_root_dir']+dir_name[dir_name.rfind('/'):]+'/'+fname[:fname.rfind('.jpg')]+'/'+'b'+str(border_index)+'/'
+                                    new_dir_name=ah['save_root_dir']+dir_name[dir_name.rfind('/'):]+'sec'+str(int(section_num))+'/'+fname[:fname.rfind(file_type)]+'/'+'b'+str(border_index)+'/'
                                     if not os.path.exists(new_dir_name):
                                         os.makedirs(new_dir_name)
                                         
                                     # find out the new file name and save
-                                    new_file_name=new_dir_name+fname[:fname.rfind('.jpg')]+aug_details+'.png'
+                                    new_file_name=new_dir_name+fname[:fname.rfind(file_type)]+aug_details+'.png'
                                     imsave(new_file_name,aug_image)
                                     
                                     # find the tissue status, a    
@@ -168,6 +183,7 @@ def rwImages(root_dir,ah,show_steps=False,to_mem=False):
                                     new_df['patient']=patient_number
                                     new_df['cancer']=False if 'normal' in dir_name.lower() else True
                                     new_df['tissue_loc_id']=tissue_loc_id
+                                    new_df['section_num']=section_num
                                     data_df=data_df.append(new_df)
                                     
                                     # assign to the right file
@@ -199,19 +215,33 @@ def rwImages(root_dir,ah,show_steps=False,to_mem=False):
 
 # take in a dataframe describing the location of each file on hd of augmented dataset and
 # return the data in memory
-  
-def readDataset(out_image_size,df_loc,randomize=True, num_images=-1):
+# Optional Flags:
+#    tissue_type: 0 for normal, 1 for cancer, 2 for both
+def readDataset(out_image_size,df_loc,randomize=True, num_images=-1, str_search='', tissue_type=2, aug=True):
     df=pd.read_pickle(df_loc)
+
+    if not aug: # do we want translated, rotated, etc?
+        df=df[df['aug']==False]
     
-    if num_images == -1:
-        num_images = len(df)
-    
+    if tissue_type<2: # if tissue_type == 2, then do both tissue types
+        df=df[df['cancer']==bool(tissue_type)]
+   
     if randomize:
         ordered_indicies=[x for x in range(len(df))]
         random_indicies=[]
         while len(ordered_indicies):
             random_indicies.append(ordered_indicies.pop(rand.randint(0,len(ordered_indicies)-1)))
         random_indicies=random_indicies[0:num_images]
+    else:
+        random_indicies = list(range(len(df)))
+
+    if str_search:
+        contains_search_bool_list=df.iloc[random_indicies]['file_loc'].str.contains(str_search).tolist()
+        random_indicies_filt=[random_indicies[x] for x in range(len(random_indicies)) if contains_search_bool_list[x]]
+        random_indicies=random_indicies_filt
+    
+    if num_images == -1 or num_images>=len(random_indicies):
+        num_images = len(random_indicies)   
 
     # dim-(number of trainingexamples, row, col, rgb)
     x_train=np.zeros((num_images,out_image_size[0],out_image_size[1],out_image_size[2]))
@@ -229,7 +259,7 @@ def readDataset(out_image_size,df_loc,randomize=True, num_images=-1):
     return x_train,y_train
 
 #'/home/ryan/Documents/Datasets/classify_histology/augmented/dataset_database_info.pkl'
-def showRandomImages(df_path,aug=False,cancer=True,patient=''):
+def showRandomImages(df_path,aug=False,cancer=True,patient='',title=False):
     grid_size=4
     
     data_df = pd.read_pickle(df_path)
@@ -239,7 +269,7 @@ def showRandomImages(df_path,aug=False,cancer=True,patient=''):
     if patient: # do we want to look at a certain patient?
         data_df=data_df[data_df['patient']==patient]
     
-    print('Your selected dataset has ' + str(len(data_df)) + 'images.')
+    print('The selected dataset has ' + str(len(data_df)) + ' images.')
     
     rand_ids = []
     normal_id_ls=[x for x in range(len(data_df))]
@@ -251,6 +281,8 @@ def showRandomImages(df_path,aug=False,cancer=True,patient=''):
         im=imageio.imread(path)
         ax=plt.subplot(grid_size,grid_size,image_num+1)
         ax.imshow(im)
-        ax.set_title(path[path.rfind('atient')-1:path.rfind('/')+2])
-        plt.axis('off')   
+        ax.set_xticks([])
+        ax.set_yticks([])
+        if title:
+            ax.set_title(path[path.rfind('atient')-1:path.rfind('/')+2])  
     plt.show() 

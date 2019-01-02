@@ -7,15 +7,15 @@ from classifyHistology.train_net import read_and_reshape_data as read
 from classifyHistology.extract_images import rw_images as rw
 
 # this is the master function that takes in training and test data and labels 
-def train(train_x,train_y,test_x,test_y,th):
+def train(train_x,train_y,test_x,test_y,th,model_init_path=[]):
     tf.reset_default_graph() #need this if running train inside loop
     
     # define weights and biases variables based on training hyperparameters (th)
     # also define the placeholders x and y 
-    weights,biases,x,y,ph_is_training = vars.definePhVar(th)
+    weights,biases,x,y,ph_is_training,ph_learning_rate = vars.definePhVar(th)
     
     # define performance metrics and optimizer
-    cost, optimizer, accuracy,pred = vars.performanceMetrics(x,y,weights,biases,th,ph_is_training)
+    cost, optimizer, accuracy,pred = vars.performanceMetrics(x,y,weights,biases,th,ph_is_training,ph_learning_rate)
     
     # make an op to save all the learned variabes:
     saver = tf.train.Saver()
@@ -47,22 +47,28 @@ def train(train_x,train_y,test_x,test_y,th):
         # initialize filewriters
         summary_writer = tf.summary.FileWriter(output_dir, sess.graph)
         
-        # Initialize the variables
-        init = tf.global_variables_initializer()
-        
-        sess.run(init) 
+        # Initialize or load the variables
+        if model_init_path:
+            saver = tf.train.Saver()
+            saver.restore(sess, model_init_path)
+        else:
+            init = tf.global_variables_initializer()
+            sess.run(init) 
         for i in range(th['training_iters']):
+            #get learning rate here:
+            learning_rate_double=getLearningRate(i,th['learning_rate'])
             for batch in range(len(train_x)//th['batch_size']):               
                 batch_x = train_x[batch*th['batch_size']:min((batch+1)*th['batch_size'],len(train_x))]
                 batch_y = train_y[batch*th['batch_size']:min((batch+1)*th['batch_size'],len(train_y))]    
                 # Run optimization op (backprop).
                 # Calculate batch loss and accuracy
-                opt = sess.run(optimizer, feed_dict={x: batch_x, y: batch_y,ph_is_training:True})
+                opt = sess.run(optimizer, feed_dict={x: batch_x, y: batch_y,ph_is_training:True,ph_learning_rate:learning_rate_double})
                 loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x, y: batch_y,ph_is_training:False})
     
             print("Iter " + str(i) + ", Loss= " + \
                           "{:.6f}".format(loss) + ", Training Accuracy= " + \
                           "{:.5f}".format(acc))
+            print("Learning rate = " + str(learning_rate_double))
             print("Optimization Finished!")
     
             # Calculate accuracy for all 10000 mnist test images
@@ -89,3 +95,15 @@ def train(train_x,train_y,test_x,test_y,th):
     print(tensorboard_loc)
     return output_dir
 #pipenv run python -m tensorboard.main --logdir=drop1:/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output04-38-37PM-December-15-2018,drop0.8:/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output05-35-24PM-December-15-2018,drop0.6:/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output06-34-47PM-December-15-2018,drop0.4:/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output07-34-02PM-December-15-2018
+
+def getLearningRate(i,learning_rate):
+
+    if type(learning_rate) is list:
+        iter_thresh=[learning_rate[x][0] for x in range(len(learning_rate))]
+        learning_rate=[learning_rate[x][1] for x in range(len(learning_rate))]
+        iter_index=0
+        while not ((i < iter_thresh[iter_index]) or (iter_thresh[iter_index]==-1)):
+            iter_index+=1
+        return learning_rate[iter_index]
+    elif type(learning_rate) is float:
+        return learning_rate
