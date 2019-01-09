@@ -6,6 +6,6 @@ __pycache__/
 notes.txt
 
 # images
-*.png
-*.tiff
-*.tif
+#*.png
+#*.tiff
+#*.tif
