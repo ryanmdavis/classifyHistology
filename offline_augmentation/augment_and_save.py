@@ -108,11 +108,7 @@ def augmentAndSave(image,normal_angle_rad,fname,dir_name,ah,save_dir='/home/ryan
         for (dr,dc) in translations:
             this_image = rotated[row_range[0]+dr:row_range[1]+dr,col_range[0]+dc:col_range[1]+dc]
             new_size=[this_image.shape[0]//ah['im_downscale_factor'],this_image.shape[1]//ah['im_downscale_factor'],this_image.shape[2]]
-            try:
-                this_image_resized = np.multiply(trans.resize(this_image.astype(float)/255., new_size,mode='reflect',anti_aliasing=True),this_image.max()).astype(int) #resize makes it to a float scale 0..1, need to change it back to int 0..255 for saving
-            except:
-                print('test')
-                
+            this_image_resized = np.multiply(trans.resize(this_image.astype(float)/255., new_size,mode='reflect',anti_aliasing=True),this_image.max()).astype(int) #resize makes it to a float scale 0..1, need to change it back to int 0..255 for saving
             this_image_flipped = np.flipud(this_image_resized)
             prefix='r'+rot_text+'..d'+num2text(dr)+'..d'+num2text(dc)
             augmented=True
@@ -200,12 +196,15 @@ def isSubImageValid2(border_index,row_border,col_border,image,normal_angle,ah):
             #    1) The rotation buffer because during rotation zero padding will cause
             #     an aliasing artifact. Rotation_buffer makes the image a bit wider to avoid
             #     a useful pixel adjacent to a zeroed pixel
-            #    2) Also add any translations for data augmentation
+            #    2) Also add any translations for data augmentation. Note that we add/subtract the max absolute value to/from the max/min because the center of the
+            #    aug_temp_image needs to be the point of rotation. So any pad added to one side needs to be added to the other side. In theory, the translate_pix_aug_col
+            #    values should be rotated with normal_angle+aug_angle, but it's not worth the effort at this point
+            max_aug_trans = np.absolute(ah['translate_pix_aug_col']+ah['translate_pix_aug_row']).max()
             rotation_buffer=2
-            temp_min_rdx=math.floor((np.array([rd1.real,rd2.real,rd3.real,rd4.real]).min()))-rotation_buffer+np.array(ah['translate_pix_aug_col']).min()
-            temp_max_rdx=math.ceil((np.array([rd1.real,rd2.real,rd3.real,rd4.real]).max()))+rotation_buffer+np.array(ah['translate_pix_aug_col']).max()
-            temp_min_rdy=math.floor((np.array([rd1.imag,rd2.imag,rd3.imag,rd4.imag]).min()))-rotation_buffer+np.array(ah['translate_pix_aug_row']).min()
-            temp_max_rdy=math.ceil((np.array([rd1.imag,rd2.imag,rd3.imag,rd4.imag]).max()))+rotation_buffer+np.array(ah['translate_pix_aug_row']).min()
+            temp_min_rdx=math.floor((np.array([rd1.real,rd2.real,rd3.real,rd4.real]).min()))-rotation_buffer-max_aug_trans
+            temp_max_rdx=math.ceil((np.array([rd1.real,rd2.real,rd3.real,rd4.real]).max()))+rotation_buffer+max_aug_trans
+            temp_min_rdy=math.floor((np.array([rd1.imag,rd2.imag,rd3.imag,rd4.imag]).min()))-rotation_buffer-max_aug_trans
+            temp_max_rdy=math.ceil((np.array([rd1.imag,rd2.imag,rd3.imag,rd4.imag]).max()))+rotation_buffer+max_aug_trans
             
             # now if the new min is less than the old min, replace
             min_rdx=temp_min_rdx if temp_min_rdx<min_rdx else min_rdx
@@ -219,6 +218,8 @@ def isSubImageValid2(border_index,row_border,col_border,image,normal_angle,ah):
         min_y=min_rdy+row_border[border_index]
         max_y=max_rdy+row_border[border_index]
     
+        if border_index == 416:
+            print('test')
         #print("min_x: "+str(min_x)+",  max_x: "+str(max_x)+",  min_y: "+str(min_y)+",  max_y: "+str(max_y))
         if min_x < 0 or min_y < 0 or max_x >= image.shape[1] or max_y >= image.shape[0]:
             return np.array([])
@@ -229,7 +230,10 @@ def isSubImageValid2(border_index,row_border,col_border,image,normal_angle,ah):
             aug_temp_image=np.zeros((2*max_abs_rdy+1,2*max_abs_rdx+1,3),dtype=int)
             
             # aug_temp_image[max_abs_rdy+1, max_abs_rdx+1] is the center of the image:
-            aug_temp_image[max_abs_rdy+1+min_rdy:max_abs_rdy+1+max_rdy,max_abs_rdx+1+min_rdx:max_abs_rdx+1+max_rdx,:]=image[row_border[border_index]+min_rdy:row_border[border_index]+max_rdy,col_border[border_index]+min_rdx:col_border[border_index]+max_rdx,:]
+            try:
+                aug_temp_image[max_abs_rdy+1+min_rdy:max_abs_rdy+1+max_rdy,max_abs_rdx+1+min_rdx:max_abs_rdx+1+max_rdx,:]=image[row_border[border_index]+min_rdy:row_border[border_index]+max_rdy,col_border[border_index]+min_rdx:col_border[border_index]+max_rdx,:]
+            except:
+                print('test')
             return aug_temp_image#.astype(float)#/255.
     print('test')
 

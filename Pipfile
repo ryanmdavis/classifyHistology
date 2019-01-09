@@ -13,6 +13,7 @@ pandas = "*"
 tensorflow = "*"
 cytoolz = "*"
 pipfile = "*"
+python3-tk = "*"
 
 [requires]
 python_version = "3.6"

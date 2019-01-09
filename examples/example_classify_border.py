@@ -38,10 +38,10 @@ th = {
     'net':'convNet3',
     'dropout_keep_prob': 0.5}
 
-model_path=['/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output08-48-07PM-December-31-2018/model/model.ckpt']
+model_path=['/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output10-23-23PM-January-02-2019/model/model.ckpt']
 
 x_test,y_test=extract.readDataset([16,64,3],'/home/ryan/Documents/Datasets/classify_histology/augmented3/train_dataset_database_info.pkl', aug = False,str_search='boundry')
 
 probs,is_cancer=ct.classify(model_path,x_test,th)
 
-print('test')
+print('Percent classified as cancer:' + str(sum(is_cancer)/len(is_cancer)))

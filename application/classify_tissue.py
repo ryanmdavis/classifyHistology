@@ -2,7 +2,7 @@ import tensorflow as tf
 from classifyHistology.train_net import vars_phs_consts_metrics as vars
 from classifyHistology.application import net_plot as netplot
 import numpy as np
-
+import os
 
 def classify(model_path,images_to_classify,th):
     # set up the graph, variables, and predictor
@@ -29,7 +29,16 @@ def classify(model_path,images_to_classify,th):
             probs_to_append=tf.nn.softmax(prediction).eval()
             probs=np.append(probs,probs_to_append[:,1].reshape((-1,1)),axis=1)
     # probs=sig.medfilt(probs[:,1:],kernel_size=[3,1])
-    probs=probs[:,1:]
-    is_cancer=probs>0.5
+    cancer_probs=probs[:,1]
+    is_cancer=cancer_probs>0.5
     
-    return probs,is_cancer
+    return cancer_probs,is_cancer
+
+def standardizeImages(images,save_root_dir):
+    # moments file must be written for this function to work
+    assert os.path.isfile(save_root_dir+'/moments.npy')
+    moments=np.load(save_root_dir+'/moments.npy')
+    for image_num in range(images.shape[0]):
+        im_temp=np.divide(np.subtract(images[image_num,:,:,:],moments[0,:,:,:]),moments[1,:,:,:])
+        images[image_num,:,:,:] = im_temp[:]
+    return images

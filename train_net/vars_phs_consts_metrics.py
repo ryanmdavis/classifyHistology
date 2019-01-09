@@ -89,7 +89,7 @@ def performanceMetrics(x,y,weights,biases,th,ph_is_training,ph_learning_rate): #
     # into the labels input on backprop by default.
     # 
     # See `tf.nn.softmax_cross_entropy_with_logits_v2`.
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=pred, labels=y))
     
     optimizer = tf.train.AdamOptimizer(learning_rate=ph_learning_rate).minimize(cost)
     

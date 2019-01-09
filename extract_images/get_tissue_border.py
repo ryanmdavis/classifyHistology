@@ -1,20 +1,29 @@
 from skimage.morphology import erosion,dilation,closing,opening, disk
 import matplotlib.pyplot as plt
 import numpy as np
-def getTissueBorder(bin_img,ah):
+def getTissueBorder(bin_img,ah,ss):
     strel5 = disk(ah['strel_size'])
     strel1 = disk(1)
     
     # smooth the edge
     closed = closing(bin_img,strel5)
     opened = opening(closed, strel5) #smoothes the edges a little bit so we get nice 1-pixel-wide paths
-
+    
+    if ss['show_steps']:
+        ax3=plt.subplot(ss['subplot_r'],ss['subplot_c'],3)
+        ax3.get_xaxis().set_visible(False)
+        ax3.get_yaxis().set_visible(False)
+        plt.imshow(opened[ss['im_range_row'],:][:,ss['im_range_col']])   
     
     # erode and calculate the tissue border image
     eroded = erosion(closed, strel1)
     border = closed^eroded
-    # show edge extraction:
-    # plt.imshow(border[70:220,550:750])
+    if ss['show_steps']:
+        ax4=plt.subplot(ss['subplot_r'],ss['subplot_c'],4)
+        ax4.get_xaxis().set_visible(False)
+        ax4.get_yaxis().set_visible(False)
+        plt.imshow(border[ss['im_range_row'],:][:,ss['im_range_col']])
+
     return border
 
 def getPixelPath(edge_image):
