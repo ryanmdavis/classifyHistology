@@ -46,14 +46,17 @@ model_path=['/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output11-39-4
 # #model_path=['/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output10-05-07PM-December-19-2018/model/model.ckpt','/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output07-56-55AM-December-20-2018/model/model.ckpt'
 
 # load the images to classify
-#image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/patient180-tumor1-tr-3-test'
-#image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient18-normal4-tl-1-'
-image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/large_dataset/Patient001'
-#image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient18-tumor5-br-2-'
+# image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/patient180-tumor1-tr-3-test'
+# image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient18-normal4-tl-1-'
+# image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/large_dataset/Patient001'
+# image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient18-tumor5-br-2-'
 # image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient18-tumor5-bl-1-'
 # image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient101-normal-1-' # this is the patient where I get the large dataset from
 # image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient101-tumor-boundry-1-'
 # image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient101-tumor-boundry-1-4'
+
+# image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient101-tumor-1-'
+image_location='/media/ryan/002E-0232/nanozoomer_images/Application_Data/Patient18-normal3-tr-4-'
 
 normal_angle_rad_list,image_pos_rc_list,images_non_standardized,f_path=extract.rwImages(image_location,ah,to_mem=True,show_steps=False)
 images_to_classify=ct.standardizeImages(images_non_standardized,ah['save_root_dir'])

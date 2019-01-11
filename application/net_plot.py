@@ -50,8 +50,7 @@ def displayAnnotated(image_location,normal_angle_rad_list,image_pos_rc_list,prob
     plt.plot(probs_filt)
     plt.xlabel('border position')
     plt.ylabel('probability of cancer')
-#     plt.show()
-    
+
     # find positions of line annotations
     write_loc=f_path[0:image_location.rfind('/')+1]+'annotated-'+image_location[image_location.rfind('/')+1:]
     plt.savefig('/home/ryan/Dropbox/Code/classifyHistology/Writeup/images/annotated.svg', format='svg', dpi=1200)
