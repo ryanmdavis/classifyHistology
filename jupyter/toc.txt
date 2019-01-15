@@ -1,0 +1,24 @@
+# Table of Contents
+### Introduction
+[Introduction](#Introduction)
+
+### Methods
+
+[Tissue Procurement and Imaging](#Tissue-Procurement-and-Imaging)
+
+[Neural Network Architecture](#Neural-Network-Architecture)
+
+[Surface Delineation Algorithm](#Surface-Delineation-Algorithm)
+
+### Results
+
+[Representative Bladder Tumor Images](#Representative-Bladder-Tumor-Images)
+
+[Representative Normal Bladder Images](#Representative-Normal-Bladder-Images)
+
+[Neural Network Training](#Network-Performance-on-Training-and-Test-Datasets)
+
+[Additional Examples of Surface Annotation](#Additional-Examples-of-Surface-Annotation)
+
+### Conclusion
+[Conclusion](#Conclusion)
