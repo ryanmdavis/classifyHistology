@@ -1,0 +1,1 @@
+pipenv run python -m tensorboard.main --logdir=drop6:/home/ryan/Dropbox/Code/classifyHistology/TensorBoard/Output11-39-49AM-January-06-2019
